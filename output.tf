@@ -8,7 +8,7 @@ output "gcp_certificate_id" {
   value       = try(google_certificate_manager_certificate.gcp_certificate[0].id, null)
 }
 
-output "certificate_maps" {
+output "certificate_map" {
   description = "Certificate Map"
   value       = local.certificate_map_id
 }

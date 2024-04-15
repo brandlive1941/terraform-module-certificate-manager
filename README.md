@@ -14,7 +14,7 @@ Usage
 
 ```hcl
 module "example" {
-  source          = "../../modules/certifate-manager"
+  source          = "github.com/brandlive1941/terraform-module-certificate-manager?ref=v1.0.1"
 
   name            = var.name
   domain          = var.domain
