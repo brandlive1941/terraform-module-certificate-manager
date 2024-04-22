@@ -3,8 +3,6 @@ locals {
   gcp_authorizations        = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
   cloudflare_hostnames      = var.domain_cloud == "cloudflare" ? var.hostnames : []
   cloudflare_authorizations = values(google_certificate_manager_dns_authorization.cloudflare_auth).*.id
-  certificate_map_name      = var.certificate_map != "" ? var.certificate_map : replace(var.name, ".", "-")
-  certificate_map_id        = var.certificate_map != "" ? var.certificate_map : try(google_certificate_manager_certificate_map.certificate_map[0].id, "")
   certificate_name          = var.certificate_name != "" ? var.certificate_name : "${var.name}"
 }
 
@@ -116,23 +114,12 @@ resource "google_certificate_manager_certificate" "cloudflare_certificate" {
   }
 }
 
-# Certificate Map
-resource "google_certificate_manager_certificate_map" "certificate_map" {
-  count = var.certificate_map == "" ? 1 : 0
-
-  name        = local.certificate_map_name
-  description = "${var.domain} certificate map"
-  labels = {
-    "terraform" : true,
-  }
-}
-
 # Certificate Map Entry (Primary, created if Default is true)
 resource "google_certificate_manager_certificate_map_entry" "default" {
-  count = var.default ? 1 : 0
+  count       = var.default ? 1 : 0
   name        = "cert-map-entry"
   description = "${var.domain} certificate map entry"
-  map         = local.certificate_map_id
+  map         = var.certificate_map
   labels = {
     "terraform" : true,
   }
@@ -145,11 +132,11 @@ resource "google_certificate_manager_certificate_map_entry" "default" {
 
 # Certificate Map Entry (Secondary, created if Default is false)
 resource "google_certificate_manager_certificate_map_entry" "certificate" {
-  count = var.default ? 0 : 1
+  count       = var.default ? 0 : 1
   name        = replace(local.certificate_name, ".", "-")
   description = "${local.certificate_name} certificate map entry"
-  map         = local.certificate_map_id
-   labels      = {
+  map         = var.certificate_map
+  labels = {
     "terraform" : true
   }
   certificates = compact([
