@@ -3,7 +3,7 @@ locals {
   gcp_authorizations        = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
   aws_hostnames             = var.domain_cloud == "aws" ? var.hostnames : []
   aws_authorizations        = values(google_certificate_manager_dns_authorization.aws_auth).*.id
-  certificate_name          = var.certificate_name != "" ? var.certificate_name : "${var.name}-cert"
+  certificate_name          = var.certificate_name != "" ? var.certificate_name : "${var.name}"
 }
 
 #### GCP DNS Authorization ####
