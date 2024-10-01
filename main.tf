@@ -153,7 +153,7 @@ resource "google_certificate_manager_dns_authorization" "aws_auth" {
 resource "aws_route53_record" "aws_auth_cname" {
   for_each = toset(local.aws_hostnames)
 
-  zone_id = aws_route53_zone.domain.zone_id
+  zone_id = data.aws_route53_zone.domain[0].zone_id
   name    = google_certificate_manager_dns_authorization.aws_auth[each.key].dns_resource_record.0.name
   type    = "CNAME"
   ttl     = 300
