@@ -1,8 +1,6 @@
 locals {
   gcp_hostnames             = var.domain_cloud == "gcp" ? var.hostnames : []
   gcp_authorizations        = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
-  cloudflare_hostnames      = var.domain_cloud == "cloudflare" ? var.hostnames : []
-  cloudflare_authorizations = values(google_certificate_manager_dns_authorization.cloudflare_auth).*.id
   aws_hostnames             = var.domain_cloud == "aws" ? var.hostnames : []
   aws_authorizations        = values(google_certificate_manager_dns_authorization.aws_auth).*.id
   certificate_name          = var.certificate_name != "" ? var.certificate_name : "${var.name}"
@@ -58,62 +56,6 @@ resource "google_certificate_manager_certificate" "gcp_certificate" {
   managed {
     domains            = local.gcp_hostnames
     dns_authorizations = local.gcp_authorizations
-  }
-  labels = {
-    "terraform" : true
-  }
-}
-
-### Cloudflare DNS Authorization ###
-
-# Cloudflare Domain
-data "cloudflare_zone" "domain" {
-  count = var.domain_cloud == "cloudflare" ? 1 : 0
-
-  name = var.domain
-}
-
-# Cloudflare Randomized ID
-resource "random_string" "cf_rand" {
-  for_each = toset(local.cloudflare_hostnames)
-
-  length  = 8
-  special = false
-  upper   = false
-}
-
-# Cloudflare DNS Authorization
-resource "google_certificate_manager_dns_authorization" "cloudflare_auth" {
-  for_each = toset(local.cloudflare_hostnames)
-
-  name        = "${replace(var.domain, ".", "-")}-dnsauth-${random_string.cf_rand[each.key].id}"
-  description = "DNS Authorization for ${var.domain}"
-  domain      = each.key
-  labels = {
-    "terraform" : true
-  }
-}
-
-# Cloudflare DNS Authorization Record
-resource "cloudflare_record" "cloudflare_auth_cname" {
-  for_each = toset(local.cloudflare_hostnames)
-
-  zone_id = data.cloudflare_zone.domain[0].id
-  name    = google_certificate_manager_dns_authorization.cloudflare_auth[each.key].dns_resource_record.0.name
-  value   = google_certificate_manager_dns_authorization.cloudflare_auth[each.key].dns_resource_record.0.data
-  type    = "CNAME"
-  proxied = false
-}
-
-# GCP Certificate with Cloudflare DNS Authorization
-resource "google_certificate_manager_certificate" "cloudflare_certificate" {
-  count = var.domain_cloud == "cloudflare" ? 1 : 0
-
-  name        = local.certificate_name
-  description = "${var.domain} certificate"
-  managed {
-    domains            = local.cloudflare_hostnames
-    dns_authorizations = local.cloudflare_authorizations
   }
   labels = {
     "terraform" : true
@@ -188,7 +130,6 @@ resource "google_certificate_manager_certificate_map_entry" "default" {
   }
   certificates = compact([
     try(google_certificate_manager_certificate.gcp_certificate[0].id, ""),
-    try(google_certificate_manager_certificate.cloudflare_certificate[0].id, ""),
     try(google_certificate_manager_certificate.aws_certificate[0].id, ""),
   ])
   matcher = "PRIMARY"
@@ -205,7 +146,6 @@ resource "google_certificate_manager_certificate_map_entry" "certificate" {
   }
   certificates = compact([
     try(google_certificate_manager_certificate.gcp_certificate[0].id, ""),
-    try(google_certificate_manager_certificate.cloudflare_certificate[0].id, ""),
     try(google_certificate_manager_certificate.aws_certificate[0].id, ""),
   ])
   hostname = var.hostnames[0]

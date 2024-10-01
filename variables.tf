@@ -9,7 +9,7 @@ variable "domain" {
 }
 
 variable "domain_cloud" {
-  description = "valid options: gcp, cloudflare, aws"
+  description = "valid options: gcp, aws"
   type        = string
 }
 
