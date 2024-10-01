@@ -4,7 +4,7 @@ locals {
   cloudflare_hostnames      = var.domain_cloud == "cloudflare" ? var.hostnames : []
   cloudflare_authorizations = values(google_certificate_manager_dns_authorization.cloudflare_auth).*.id
   aws_hostnames             = var.domain_cloud == "aws" ? var.hostnames : []
-  aws_authorizations        = values(google_certificate_manager_dns_authorization.aws_auth).*.resource_record_name
+  aws_authorizations        = values(google_certificate_manager_dns_authorization.aws_auth).*.id
   certificate_name          = var.certificate_name != "" ? var.certificate_name : "${var.name}"
 }
 
