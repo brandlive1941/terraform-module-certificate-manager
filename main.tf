@@ -1,10 +1,8 @@
 locals {
   gcp_hostnames             = var.domain_cloud == "gcp" ? var.hostnames : []
-  gcp_authorizations        = setsubtract(local.gcp_hostnames, ["*.${var.domain}"])
-  gcp_authorizations_values = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
+  gcp_authorizations        = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
   aws_hostnames             = var.domain_cloud == "aws" ? var.hostnames : []
-  aws_authorizations        = setsubtract(local.aws_hostnames, ["*.${var.domain}"])
-  aws_authorizations_values = values(google_certificate_manager_dns_authorization.aws_auth).*.id
+  aws_authorizations        = values(google_certificate_manager_dns_authorization.aws_auth).*.id
   certificate_name          = var.certificate_name != "" ? var.certificate_name : "${var.name}-cert"
 }
 
@@ -19,7 +17,7 @@ data "google_dns_managed_zone" "gcp_zone" {
 
 # GCP Randomized ID
 resource "random_string" "gcp_rand" {
-  for_each = toset(local.gcp_hostnames)
+  for_each = toset(setsubtract(local.gcp_hostnames, ["*.${var.domain}"]))
 
   length  = 8
   special = false
@@ -28,7 +26,7 @@ resource "random_string" "gcp_rand" {
 
 # GCP DNS Authorization
 resource "google_certificate_manager_dns_authorization" "gcp_auth" {
-  for_each = toset(local.gcp_authorizations)
+  for_each = toset(setsubtract(local.gcp_hostnames, ["*.${var.domain}"]))
 
   name        = "${data.google_dns_managed_zone.gcp_zone[0].name}-dnsauth-${random_string.gcp_rand[each.key].id}"
   description = "DNS Authorization for ${data.google_dns_managed_zone.gcp_zone[0].dns_name}"
@@ -40,7 +38,7 @@ resource "google_certificate_manager_dns_authorization" "gcp_auth" {
 
 # GCP DNS Authorization Record
 resource "google_dns_record_set" "gcp_auth_cname" {
-  for_each = toset(local.gcp_authorizations)
+  for_each = toset(setsubtract(local.gcp_hostnames, ["*.${var.domain}"]))
 
   name         = google_certificate_manager_dns_authorization.gcp_auth[each.key].dns_resource_record[0].name
   managed_zone = data.google_dns_managed_zone.gcp_zone[0].name
@@ -57,7 +55,7 @@ resource "google_certificate_manager_certificate" "gcp_certificate" {
   description = "${data.google_dns_managed_zone.gcp_zone[0].name} certificate"
   managed {
     domains            = local.gcp_hostnames
-    dns_authorizations = local.gcp_authorizations_values
+    dns_authorizations = local.gcp_authorizations
   }
   labels = {
     "terraform" : true
@@ -74,7 +72,7 @@ data "aws_route53_zone" "domain" {
 
 # AWS Randomized ID
 resource "random_string" "aws_rand" {
-  for_each = toset(local.aws_authorizations)
+  for_each = toset(setsubtract(local.aws_hostnames, ["*.${var.domain}"]))
 
   length  = 8
   special = false
@@ -83,7 +81,7 @@ resource "random_string" "aws_rand" {
 
 # AWS DNS Authorization
 resource "google_certificate_manager_dns_authorization" "aws_auth" {
-  for_each    = toset(local.aws_authorizations)
+  for_each    = toset(setsubtract(local.aws_hostnames, ["*.${var.domain}"]))
   name        = "${replace(var.domain, ".", "-")}-dnsauth-${random_string.aws_rand[each.key].id}"
   description = "DNS Authorization for ${var.domain}"
   domain      = each.key
@@ -94,7 +92,7 @@ resource "google_certificate_manager_dns_authorization" "aws_auth" {
 
 # AWS DNS Authorization Record
 resource "aws_route53_record" "aws_auth_cname" {
-  for_each = toset(local.aws_authorizations)
+  for_each = toset(setsubtract(local.aws_hostnames, ["*.${var.domain}"]))
 
   zone_id = data.aws_route53_zone.domain[0].zone_id
   name    = google_certificate_manager_dns_authorization.aws_auth[each.key].dns_resource_record.0.name
@@ -111,7 +109,7 @@ resource "google_certificate_manager_certificate" "aws_certificate" {
   description = "${var.domain} certificate"
   managed {
     domains            = local.aws_hostnames
-    dns_authorizations = local.aws_authorizations_values
+    dns_authorizations = local.aws_authorizations
   }
   labels = {
     "terraform" : true
