@@ -1,5 +1,5 @@
 locals {
-  authorizations = setsubtract(var.hostnames, "*.${var.domain}")
+  authorizations = setsubtract(var.hostnames, ["*.${var.domain}"])
   gcp_hostnames             = var.domain_cloud == "gcp" ? var.hostnames : []
   gcp_authorizations_values        = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
   aws_hostnames             = var.domain_cloud == "aws" ? var.hostnames : []
