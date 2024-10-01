@@ -57,7 +57,7 @@ resource "google_certificate_manager_certificate" "gcp_certificate" {
   description = "${data.google_dns_managed_zone.gcp_zone[0].name} certificate"
   managed {
     domains            = local.gcp_hostnames
-    dns_authorizations = local.gcp_authorizations
+    dns_authorizations = local.gcp_authorizations_values
   }
   labels = {
     "terraform" : true
@@ -111,7 +111,7 @@ resource "google_certificate_manager_certificate" "aws_certificate" {
   description = "${var.domain} certificate"
   managed {
     domains            = local.aws_hostnames
-    dns_authorizations = local.aws_authorizations
+    dns_authorizations = local.aws_authorizations_values
   }
   labels = {
     "terraform" : true
