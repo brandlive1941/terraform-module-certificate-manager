@@ -1,9 +1,9 @@
 locals {
   gcp_hostnames      = var.domain_cloud == "gcp" ? var.hostnames : []
-  gcp_authorizations = setsubtract(gcp.hostnames, ["*.${var.domain}"])
+  gcp_authorizations = setsubtract(local.gcp_hostnames, ["*.${var.domain}"])
   gcp_authorizations_values = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
   aws_hostnames             = var.domain_cloud == "aws" ? var.hostnames : []
-  aws_authorizations        = setsubtract(aws.hostnames, ["*.${var.domain}"])
+  aws_authorizations        = setsubtract(local.aws_hostnames, ["*.${var.domain}"])
   aws_authorizations_values = values(google_certificate_manager_dns_authorization.aws_auth).*.id
   certificate_name          = var.certificate_name != "" ? var.certificate_name : "${var.name}"
 }
