@@ -27,7 +27,7 @@ resource "random_string" "gcp_rand" {
 
 # GCP DNS Authorization
 resource "google_certificate_manager_dns_authorization" "gcp_auth" {
-  for_each = toset(local.gcp_hostnames)
+  for_each = toset(local.authorizations)
 
   name        = "${data.google_dns_managed_zone.gcp_zone[0].name}-dnsauth-${random_string.gcp_rand[each.key].id}"
   description = "DNS Authorization for ${data.google_dns_managed_zone.gcp_zone[0].dns_name}"
