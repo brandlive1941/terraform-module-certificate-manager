@@ -1,7 +1,6 @@
 locals {
   gcp_hostnames      = var.domain_cloud == "gcp" ? var.hostnames : []
   gcp_authorizations = setsubtract(gcp.hostnames, ["*.${var.domain}"])
-
   gcp_authorizations_values = values(google_certificate_manager_dns_authorization.gcp_auth).*.id
   aws_hostnames             = var.domain_cloud == "aws" ? var.hostnames : []
   aws_authorizations        = setsubtract(aws.hostnames, ["*.${var.domain}"])
@@ -75,7 +74,7 @@ data "aws_route53_zone" "domain" {
 
 # AWS Randomized ID
 resource "random_string" "aws_rand" {
-  for_each = toset(local.authorizations)
+  for_each = toset(local.aws_authorizations)
 
   length  = 8
   special = false
