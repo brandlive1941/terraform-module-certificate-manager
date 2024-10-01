@@ -7,3 +7,8 @@ output "gcp_certificate_id" {
   description = "GCP Certificate ID"
   value       = try(google_certificate_manager_certificate.gcp_certificate[0].id, null)
 }
+
+output "authorizations" {
+  description = "DNS Authorizations"
+  value       = local.authorizations
+}
