@@ -39,7 +39,7 @@ resource "google_certificate_manager_dns_authorization" "gcp_auth" {
 
 # GCP DNS Authorization Record
 resource "google_dns_record_set" "gcp_auth_cname" {
-  for_each = toset(local.gcp_hostnames)
+  for_each = toset(local.authorizations)
 
   name         = google_certificate_manager_dns_authorization.gcp_auth[each.key].dns_resource_record[0].name
   managed_zone = data.google_dns_managed_zone.gcp_zone[0].name
@@ -93,7 +93,7 @@ resource "google_certificate_manager_dns_authorization" "aws_auth" {
 
 # AWS DNS Authorization Record
 resource "aws_route53_record" "aws_auth_cname" {
-  for_each = toset(local.aws_hostnames)
+  for_each = toset(local.authorizations)
 
   zone_id = data.aws_route53_zone.domain[0].zone_id
   name    = google_certificate_manager_dns_authorization.aws_auth[each.key].dns_resource_record.0.name
