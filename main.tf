@@ -121,7 +121,7 @@ resource "google_certificate_manager_certificate" "aws_certificate" {
 # Certificate Map Entry (Primary, created if Default is true)
 resource "google_certificate_manager_certificate_map_entry" "default" {
   count       = var.default ? 1 : 0
-  name        = "cert-map-entry"
+  name        = replace(local.hostnames[0], ".", "-")
   description = "${var.hostnames[0]} certificate map entry"
   map         = var.certificate_map
   labels = {
@@ -134,7 +134,7 @@ resource "google_certificate_manager_certificate_map_entry" "default" {
 # Certificate Map Entry (Secondary, created if Default is false)
 resource "google_certificate_manager_certificate_map_entry" "certificate" {
   count       = var.default ? 0 : 1
-  name        = replace(local.certificate_name, ".", "-")
+  name        = replace(local.hostnames[0], ".", "-")
   description = "${var.hostnames[0]} certificate map entry"
   map         = var.certificate_map
   labels = {
