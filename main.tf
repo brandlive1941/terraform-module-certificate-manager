@@ -127,10 +127,7 @@ resource "google_certificate_manager_certificate_map_entry" "default" {
   labels = {
     "terraform" : true,
   }
-  certificates = compact([
-    try(google_certificate_manager_certificate.gcp_certificate[0].id, ""),
-    try(google_certificate_manager_certificate.aws_certificate[0].id, ""),
-  ])
+  certificates = [ google_certificate_manager_certificate.aws_certificate[0].id]
   matcher = "PRIMARY"
 }
 
@@ -143,10 +140,7 @@ resource "google_certificate_manager_certificate_map_entry" "certificate" {
   labels = {
     "terraform" : true
   }
-  certificates = compact([
-    try(google_certificate_manager_certificate.gcp_certificate[0].id, ""),
-    try(google_certificate_manager_certificate.aws_certificate[0].id, ""),
-  ])
+  certificates = [ google_certificate_manager_certificate.aws_certificate[0].id]
   hostname = var.hostnames[0]
 }
 
