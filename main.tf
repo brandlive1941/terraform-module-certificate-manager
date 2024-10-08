@@ -128,6 +128,7 @@ resource "google_certificate_manager_certificate_map_entry" "default" {
     "terraform" : true,
   }
   certificates = [ google_certificate_manager_certificate.aws_certificate[0].id]
+  hostname = var.hostnames[0]
   matcher = "PRIMARY"
 }
 
@@ -141,6 +142,6 @@ resource "google_certificate_manager_certificate_map_entry" "certificate" {
     "terraform" : true
   }
   certificates = [ google_certificate_manager_certificate.aws_certificate[0].id]
-  hostname = local.aws_hostnames[0]
+  hostname = var.hostnames[0]
 }
 
