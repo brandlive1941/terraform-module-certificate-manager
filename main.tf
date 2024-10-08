@@ -141,6 +141,6 @@ resource "google_certificate_manager_certificate_map_entry" "certificate" {
     "terraform" : true
   }
   certificates = [ google_certificate_manager_certificate.aws_certificate[0].id]
-  hostname = var.hostnames[0]
+  hostname = local.aws_hostnames
 }
 
