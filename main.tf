@@ -121,8 +121,8 @@ resource "google_certificate_manager_certificate" "aws_certificate" {
 # Certificate Map Entry (Primary, created if Default is true)
 resource "google_certificate_manager_certificate_map_entry" "default" {
   count       = var.default ? 1 : 0
-  name        = replace(var.hostnames[0], ".", "-")
-  description = "${var.hostnames[0]} certificate map entry"
+  name        = replace(var.name, ".", "-")
+  description = "${var.name} certificate map entry"
   map         = var.certificate_map
   labels = {
     "terraform" : true,
@@ -134,8 +134,8 @@ resource "google_certificate_manager_certificate_map_entry" "default" {
 # Certificate Map Entry (Secondary, created if Default is false)
 resource "google_certificate_manager_certificate_map_entry" "certificate" {
   count       = var.default ? 0 : 1
-  name        = replace(var.hostnames[0], ".", "-")
-  description = "${var.hostnames[0]} certificate map entry"
+  name        = replace(var.name, ".", "-")
+  description = "${var.name} certificate map entry"
   map         = var.certificate_map
   labels = {
     "terraform" : true
