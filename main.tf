@@ -9,7 +9,7 @@ locals {
 
 # GCP Domain
 data "google_dns_managed_zone" "gcp_zone" {
-  count = var.domain_cloud == "gcp" ? 1 : 0
+  count = var.domain_cloud == "gcp" && var.dns_managed ? 1 : 0
 
   name = replace(var.domain, ".", "-")
 }
@@ -27,8 +27,8 @@ resource "random_string" "gcp_rand" {
 resource "google_certificate_manager_dns_authorization" "gcp_auth" {
   for_each = toset(setsubtract(local.gcp_hostnames, ["*.${var.domain}"]))
 
-  name        = "${data.google_dns_managed_zone.gcp_zone[0].name}-dnsauth-${random_string.gcp_rand[each.key].id}"
-  description = "DNS Authorization for ${data.google_dns_managed_zone.gcp_zone[0].dns_name}"
+  name        = "${replace(var.domain, ".", "-")}-dnsauth-${random_string.gcp_rand[each.key].id}"
+  description = "DNS Authorization for ${var.domain}"
   domain      = each.key
   labels = {
     "terraform" : true
@@ -37,7 +37,7 @@ resource "google_certificate_manager_dns_authorization" "gcp_auth" {
 
 # GCP DNS Authorization Record
 resource "google_dns_record_set" "gcp_auth_cname" {
-  for_each = toset(setsubtract(local.gcp_hostnames, ["*.${var.domain}"]))
+  for_each = var.dns_managed ? toset(setsubtract(local.gcp_hostnames, ["*.${var.domain}"])) : []
 
   name         = google_certificate_manager_dns_authorization.gcp_auth[each.key].dns_resource_record[0].name
   managed_zone = data.google_dns_managed_zone.gcp_zone[0].name
@@ -50,8 +50,8 @@ resource "google_dns_record_set" "gcp_auth_cname" {
 resource "google_certificate_manager_certificate" "gcp_certificate" {
   count = var.domain_cloud == "gcp" ? 1 : 0
 
-  name        = "${replace(data.google_dns_managed_zone.gcp_zone[0].name, ".", "-")}-certificate"
-  description = "${data.google_dns_managed_zone.gcp_zone[0].name} certificate"
+  name        = "${replace(var.domain, ".", "-")}-certificate"
+  description = "${var.domain} certificate"
   managed {
     domains            = local.gcp_hostnames
     dns_authorizations = local.gcp_authorizations
@@ -65,7 +65,7 @@ resource "google_certificate_manager_certificate" "gcp_certificate" {
 
 # Cloudflare Domain
 data "cloudflare_zone" "domain" {
-  count = var.domain_cloud == "cloudflare" ? 1 : 0
+  count = var.domain_cloud == "cloudflare" && var.dns_managed ? 1 : 0
 
   name = var.domain
 }
@@ -93,7 +93,7 @@ resource "google_certificate_manager_dns_authorization" "cloudflare_auth" {
 
 # Cloudflare DNS Authorization Record
 resource "cloudflare_record" "cloudflare_auth_cname" {
-  for_each = toset(setsubtract(local.cloudflare_hostnames, ["*.${var.domain}"]))
+  for_each = var.dns_managed ? toset(setsubtract(local.cloudflare_hostnames, ["*.${var.domain}"])) : []
 
   zone_id = data.cloudflare_zone.domain[0].id
   name    = google_certificate_manager_dns_authorization.cloudflare_auth[each.key].dns_resource_record.0.name
