@@ -35,3 +35,9 @@ variable "default" {
   type        = bool
   default     = false
 }
+
+variable "dns_managed" {
+  description = "Whether to manage DNS records (set to false for external domains)"
+  type        = bool
+  default     = true
+}
